@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
@@ -21,6 +22,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.awt.geom.Arc2D; // 导入 Arc2D 类
 
 @RestController
 @RequestMapping("/api/captcha")
@@ -50,30 +52,52 @@ public class SliderCaptchaController {
         int x = random.nextInt(bgWidth - captchaWidth - sliderBlockGap);
         int y = random.nextInt(bgHeight - captchaHeight);
 
-        // 截取滑块图片
-        BufferedImage sliderImage = backgroundImage.getSubimage(x, y, captchaWidth, captchaHeight);
-
         // 创建一个新的背景图片，将滑块区域设置为透明
         BufferedImage maskedBackgroundImage = new BufferedImage(bgWidth, bgHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = maskedBackgroundImage.createGraphics();
         g2d.drawImage(backgroundImage, 0, 0, null);
         g2d.setComposite(AlphaComposite.Clear);
-        g2d.fillRect(x, y, captchaWidth, captchaHeight);
+
+        // 定义滑块形状：整体是方形，左边凹进去一个小半圆，下边突出来一个小半圆
+        GeneralPath path = new GeneralPath();
+        int radius = 20; // 小半圆的半径
+
+        // 左边凹进去的半圆（位于左边中心）
+        int leftCenterY = y + captchaHeight / 2; // 左边中心点的 Y 坐标
+        path.moveTo(x, y); // 起点：左上角
+        path.lineTo(x, leftCenterY - radius); // 向下移动到凹进去的半圆起点
+        path.append(new Arc2D.Double(x - radius, leftCenterY - radius, 2 * radius, 2 * radius, 90, 180, Arc2D.OPEN), true); // 左边凹进去的半圆
+        path.lineTo(x, y + captchaHeight); // 向下移动到左下角
+
+        // 下边突出来的半圆（位于下边中心）
+        int bottomCenterX = x + captchaWidth / 2; // 下边中心点的 X 坐标
+        path.lineTo(bottomCenterX - radius, y + captchaHeight); // 向右移动到突出来的半圆起点
+        path.append(new Arc2D.Double(bottomCenterX - radius, y + captchaHeight - radius, 2 * radius, 2 * radius, 180, 180, Arc2D.OPEN), true); // 下边突出来的半圆
+        path.lineTo(x + captchaWidth, y + captchaHeight); // 向右移动到底部右侧
+
+        // 闭合路径
+        path.lineTo(x + captchaWidth, y); // 向上移动到右上角
+        path.lineTo(x, y); // 向左移动到起点
+        path.closePath(); // 闭合路径
+
+        g2d.fill(path); // 填充路径，形成透明区域
         g2d.setComposite(AlphaComposite.SrcOver);
         g2d.dispose();
 
-        // 在滑块图片上绘制不规则形状的凹凸部分
+        // 创建一个新的滑块图片，形状与背景中的透明区域一致
+        BufferedImage sliderImage = new BufferedImage(captchaWidth, captchaHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D sliderG2d = sliderImage.createGraphics();
-        sliderG2d.setColor(new Color(255, 255, 255, 0)); // 设置透明色
 
-        GeneralPath path = new GeneralPath();
-        path.moveTo(0, 0);
-        path.curveTo(captchaWidth / 4, captchaHeight / 4, captchaWidth / 2, captchaHeight / 2, captchaWidth, 0);
-        path.lineTo(captchaWidth, captchaHeight);
-        path.lineTo(0, captchaHeight);
-        path.closePath();
+        // 将滑块的路径平移到滑块图片的坐标系
+        GeneralPath sliderPath = new GeneralPath(path);
+        sliderPath.transform(AffineTransform.getTranslateInstance(-x, -y)); // 平移路径
 
-        sliderG2d.fill(path);
+        // 设置滑块图片的裁剪区域
+        sliderG2d.setClip(sliderPath);
+
+        // 从背景图中截取滑块区域的图像，并绘制到滑块图片中
+        BufferedImage sliderSubImage = backgroundImage.getSubimage(x, y, captchaWidth, captchaHeight);
+        sliderG2d.drawImage(sliderSubImage, 0, 0, null);
         sliderG2d.dispose();
 
         // 将背景图片和滑块图片转换为Base64编码的字符串
