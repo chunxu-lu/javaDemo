@@ -71,11 +71,10 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- 添加 javax.imageio 依赖项 -->
         <dependency>
-            <groupId>javax.imageio</groupId>
-            <artifactId>imageio-core</artifactId>
-            <version>3.4.1</version>
+            <groupId>com.anji-plus</groupId>
+            <artifactId>captcha</artifactId>
+            <version>1.4.0</version>
         </dependency>
     </dependencies>
 
