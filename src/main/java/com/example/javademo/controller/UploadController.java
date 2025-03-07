@@ -6,6 +6,9 @@ import java.util.Map;
 import com.example.javademo.model.Bgimgtable;
 import java.util.HashMap;
 import java.io.IOException;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
@@ -13,6 +16,7 @@ import com.example.javademo.util.QiniuCloudUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.javademo.model.ImageResponse; // 导入新创建的类
 
 @RestController
 @RequestMapping("/api") // 添加 /api 前缀
@@ -65,15 +69,26 @@ public class UploadController {
     }
 
     @GetMapping("/getImages")
-    public List<String> getAllImages() {
+    public List<ImageResponse> getAllImages() { // 修改返回类型
         return bgimgtableRepository.findAll().stream()
                                   .map(bgimgtable -> {
                                       String imgUrl = bgimgtable.getImgUrl();
                                       if (!imgUrl.startsWith("http://")) {
-                                          return "http://" + imgUrl; // 修改后的代码
+                                          imgUrl = "http://" + imgUrl; // 修改后的代码
                                       }
-                                      return imgUrl;
+                                      return new ImageResponse(bgimgtable.getId(), imgUrl, bgimgtable.getImgName()); // 创建 ImageResponse 对象并包含 imgName
                                   })
                                   .collect(Collectors.toList());
+    }
+
+    @PostMapping("/deleteImage")
+    public ResponseEntity<String> deleteImage(@RequestBody Map<String, Long> request) {
+        Long id = request.get("id");
+        if (bgimgtableRepository.existsById(id)) {
+            bgimgtableRepository.deleteById(id);
+            return ResponseEntity.ok("Image deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found");
+        }
     }
 }
