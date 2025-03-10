@@ -73,8 +73,8 @@ public class UploadController {
         return bgimgtableRepository.findAll().stream()
                                   .map(bgimgtable -> {
                                       String imgUrl = bgimgtable.getImgUrl();
-                                      if (!imgUrl.startsWith("http://")) {
-                                          imgUrl = "http://" + imgUrl; // 修改后的代码
+                                      if (!imgUrl.startsWith("https://")) {
+                                          imgUrl = "https://" + imgUrl; // 修改后的代码
                                       }
                                       return new ImageResponse(bgimgtable.getId(), imgUrl, bgimgtable.getImgName()); // 创建 ImageResponse 对象并包含 imgName
                                   })
