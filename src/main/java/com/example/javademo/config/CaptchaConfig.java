@@ -44,7 +44,7 @@ public class CaptchaConfig {
         //各种参数设置....
         //缓存类型redis/local/....
         config.put(Const.CAPTCHA_CACHETYPE, "local");
-        config.put(Const.CAPTCHA_WATER_MARK, "我的水印");
+        config.put(Const.CAPTCHA_WATER_MARK, "比特跳跃");
         config.put(Const.CAPTCHA_FONT_TYPE, "宋体");
         config.put(Const.CAPTCHA_TYPE, "default");
         config.put(Const.CAPTCHA_INTERFERENCE_OPTIONS, "0");

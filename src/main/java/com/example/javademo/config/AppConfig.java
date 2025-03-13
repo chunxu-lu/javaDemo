@@ -3,7 +3,6 @@ package com.example.javademo.config; // 确保这里的包声明是正确的
 import com.example.javademo.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class AppConfig {
