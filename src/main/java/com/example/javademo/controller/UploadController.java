@@ -2,6 +2,7 @@ package com.example.javademo.controller;
 
 import com.example.javademo.mapper.BgimgtableMapper;
 import com.example.javademo.entity.Bgimgtable;
+import com.example.javademo.model.ResponseResult;
 import com.example.javademo.util.QiniuCloudUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class UploadController {
     private BgimgtableMapper bgimgtableMapper;
 
     @PostMapping("/upload")
-    public Map<String, Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file, @RequestParam("imgName") String imgName, @RequestParam("flag") String flag) {
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file, @RequestParam("imgName") String imgName, @RequestParam("flag") String flag) {
         Map<String, Map<String, String>> response = new HashMap<>();
         Map<String, String> msg = new HashMap<>();
 
@@ -34,8 +35,9 @@ public class UploadController {
 
         if (file.isEmpty()) {
             msg.put("msg", "文件不能为空");
-            response.put("data", msg);
-            return response;
+//            response.put("data", msg);
+//            return response;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseResult<>(HttpStatus.BAD_REQUEST.value(), "文件不能为空", null));
         }
 
         try {
@@ -57,18 +59,22 @@ public class UploadController {
                 msg.put("msg", "上传失败");
             }
             response.put("data", msg);
-            return response;
+//            return response;
+            return ResponseEntity.ok(new ResponseResult<>(HttpStatus.OK.value(), "success", msg));
         } catch (IOException e) {
             e.printStackTrace();
             msg.put("msg", "上传失败");
             response.put("data", msg);
-            return response;
+//            return response;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseResult<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "上传失败", null));
         }
     }
 
     @GetMapping("/getImages")
-    public List<Bgimgtable> getAllImages() { // 修改返回类型
-        return bgimgtableMapper.selectAll().stream()
+    public
+    ResponseEntity
+            <ResponseResult<List<Bgimgtable>>> getAllImages() { // 修改返回类型
+        List<Bgimgtable> bgimgs = bgimgtableMapper.selectAll().stream()
                 .map(bgimgtable -> {
                     String imgUrl = bgimgtable.getImgUrl();
                     if (!imgUrl.startsWith("https://")) {
@@ -77,16 +83,19 @@ public class UploadController {
                     return new Bgimgtable(bgimgtable.getId(), imgUrl, bgimgtable.getImgName(),bgimgtable.getFlag()); // 创建 Bgimgtable 对象并包含 imgName
                 })
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(new ResponseResult<>(HttpStatus.OK.value(), "success", bgimgs));
     }
 
     @PostMapping("/deleteImage")
-    public ResponseEntity<String> deleteImage(@RequestBody Map<String, Long> request) {
+    public ResponseEntity<?> deleteImage(@RequestBody Map<String, Long> request) {
         Long id = request.get("id");
         if (bgimgtableMapper.selectById(id) != null) { // 注意这里需要根据实际情况调整方法名或实现
             bgimgtableMapper.deleteById(id);
-            return ResponseEntity.ok("Image deleted successfully");
+//            return ResponseEntity.ok("Image deleted successfully");
+            return ResponseEntity.ok(new ResponseResult<>(HttpStatus.OK.value(), "Image deleted successfully", null));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found");
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseResult<>(HttpStatus.NOT_FOUND.value(), "Image not found", null));
         }
     }
 }

@@ -5,6 +5,7 @@ import java.util.Date;
 public class User {
     private Long id;
     private String user_name;
+    private String password;
     private String nick_name;
     private String name;
     private int age;
@@ -27,6 +28,14 @@ public class User {
 
     public void setUserName(String user_name) {
         this.user_name = user_name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getNickName() {

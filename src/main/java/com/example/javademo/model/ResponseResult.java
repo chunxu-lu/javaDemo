@@ -1,5 +1,7 @@
 package com.example.javademo.model;
 
+import org.springframework.http.HttpStatus;
+
 public class ResponseResult<T> {
     private int code;
     private String msg;
@@ -24,10 +26,10 @@ public class ResponseResult<T> {
 
     // 快捷方法
     public static <T> ResponseResult<T> success(T data) {
-        return new ResponseResult<>(200, "success", data);
+        return new ResponseResult<>(HttpStatus.OK.value(), "success", data);
     }
 
     public static <T> ResponseResult<T> error(int code, String msg) {
-        return new ResponseResult<>(code, msg, null);
+        return new ResponseResult<>(HttpStatus.BAD_REQUEST.value(), msg, null);
     }
 }

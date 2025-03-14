@@ -18,6 +18,6 @@ public class UserController {
     private UserMapper userMapper;
     @GetMapping("/list")
     public ResponseResult<List<User>>  getUsers(){
-        return new ResponseResult(200,"success",userMapper.selectAll());
+        return (new ResponseResult()).success(userMapper.selectAll());
     }
 }
