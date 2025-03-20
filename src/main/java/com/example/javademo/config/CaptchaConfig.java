@@ -44,15 +44,15 @@ public class CaptchaConfig {
         //各种参数设置....
         //缓存类型redis/local/....
         config.put(Const.CAPTCHA_CACHETYPE, "local");
-        config.put(Const.CAPTCHA_WATER_MARK, "\\u6bd4\\u7279\\u8df3\\u8d8a");
-        config.put(Const.CAPTCHA_FONT_TYPE, "微软雅黑");
+        config.put(Const.CAPTCHA_WATER_MARK, "比特跳跃");
+        config.put(Const.CAPTCHA_FONT_TYPE, "文泉驿微米黑");
         config.put(Const.CAPTCHA_TYPE, "default");
         config.put(Const.CAPTCHA_INTERFERENCE_OPTIONS, "0");
         config.put(Const.ORIGINAL_PATH_JIGSAW, "");
         config.put(Const.ORIGINAL_PATH_PIC_CLICK, "");
         config.put(Const.CAPTCHA_SLIP_OFFSET, "5");
         config.put(Const.CAPTCHA_AES_STATUS, "true");
-        config.put(Const.CAPTCHA_WATER_FONT, "");
+        config.put(Const.CAPTCHA_WATER_FONT, "文泉驿微米黑");
         config.put(Const.CAPTCHA_CACAHE_MAX_NUMBER, "1000");
         config.put(Const.CAPTCHA_TIMING_CLEAR_SECOND, "180");
         //更多自定义参数，请参考service/springboot/../resources/application.properties
