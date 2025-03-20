@@ -6,6 +6,7 @@ import com.example.javademo.model.JwtResponse;
 import com.example.javademo.model.LoginRequest;
 import com.example.javademo.model.ResponseResult;
 import com.example.javademo.model.UserResponse;
+import com.example.javademo.service.RedisService;
 import com.example.javademo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,13 +23,17 @@ public class AuthController {
 
     private final JwtUtil jwtUtil;
 
+    private final RedisService redisService; // 添加RedisService
+
     @Autowired
-    public AuthController(JwtUtil jwtUtil) {
+    public AuthController(JwtUtil jwtUtil,RedisService redisService) {
         this.jwtUtil = jwtUtil;
+        this.redisService = redisService;
     }
 
     @Autowired
     private UserMapper userMapper;
+
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest authenticationRequest) throws Exception {
@@ -43,6 +48,7 @@ public class AuthController {
         }
 
         final String jwt = jwtUtil.generateToken(authenticationRequest.getUsername());
+        redisService.saveData("userName", authenticationRequest.getUsername());
         return ResponseEntity.ok(new ResponseResult().success(new JwtResponse(jwt)));
     }
 
