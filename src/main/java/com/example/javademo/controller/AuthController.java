@@ -23,17 +23,16 @@ public class AuthController {
 
     private final JwtUtil jwtUtil;
 
-    private final RedisService redisService; // 添加RedisService
-
     @Autowired
-    public AuthController(JwtUtil jwtUtil,RedisService redisService) {
+    public AuthController(JwtUtil jwtUtil ) {
         this.jwtUtil = jwtUtil;
-        this.redisService = redisService;
     }
 
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private RedisService redisService;
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest authenticationRequest) throws Exception {
@@ -48,7 +47,8 @@ public class AuthController {
         }
 
         final String jwt = jwtUtil.generateToken(authenticationRequest.getUsername());
-        redisService.saveData("userName", authenticationRequest.getUsername());
+        redisService.saveData("userName:" + authenticationRequest.getUsername(), authenticationRequest.getUsername()); // 保存用户名到Redis
+        redisService.saveData("session:" + jwt, authenticationRequest.getUsername()); // 保存用户名到Redis，键为session ID
         return ResponseEntity.ok(new ResponseResult().success(new JwtResponse(jwt)));
     }
 
@@ -66,6 +66,30 @@ public class AuthController {
             return ResponseEntity.ok(new ResponseResult().success(response));
         } else {
             return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
+        }
+    }
+
+    @PostMapping("/clear-chat-history")
+    public ResponseEntity<?> clearChatHistory() {
+        redisService.clearChatHistory();
+        return ResponseEntity.ok(new ResponseResult().success("Chat history cleared successfully"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", null));
+        }
+
+        String token = authHeader.substring(7); // The part after "Bearer "
+        String username = jwtUtil.getUsernameFromToken(token);
+
+        if (username != null) {
+            redisService.deleteData("userName:" + username); // 删除用户名
+            redisService.deleteData("session:" + token); // 删除会话ID
+            return ResponseEntity.ok(new ResponseResult().success("Logged out successfully"));
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
         }
     }
 
