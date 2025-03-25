@@ -53,11 +53,13 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
                 userName = "匿名用户";
             }
         }
-        String joinMessage = userName + "加入了群聊！";
+        JSONObject json = new JSONObject();
+        json.put("username", "system");
+        json.put("message", userName+"加入了群聊！");
         // 广播加入群聊的消息给所有用户
         for (WebSocketSession s : sessions) {
             if (s.isOpen()) {
-                s.sendMessage(new TextMessage(joinMessage));
+                s.sendMessage(new TextMessage(json.toString()));
             }
         }
     }
@@ -67,15 +69,22 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
         System.out.println("message: " + message);
         System.out.println("收到消息: " + message.getPayload());
         JSONObject json = new JSONObject(message.getPayload());
-        String msg = json.getString("user") + ": " + json.getString("message");
+        String username = json.getString("user");
+        String msg = json.getString("message");
+
+        // 创建一个新的JSONObject来存储username和message
+        JSONObject responseJson = new JSONObject();
+        responseJson.put("username", username);
+        responseJson.put("message", msg);
+
         // 广播消息给所有用户
         for (WebSocketSession s : sessions) {
             if (s.isOpen()) {
-                s.sendMessage(new TextMessage(msg));
+                s.sendMessage(new TextMessage(responseJson.toString()));
             }
         }
         // 将新消息保存到Redis中
-        redisService.saveMessage(msg);
+        redisService.saveMessage(responseJson.toString());
     }
 
     @Override
