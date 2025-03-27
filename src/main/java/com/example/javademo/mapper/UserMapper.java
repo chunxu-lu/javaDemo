@@ -6,10 +6,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface UserMapper {
     List<User> selectAll();
 
-    UserLoginDTO findByUsername(@Param("username") String username);
+    Optional<UserLoginDTO> findByUsername(@Param("username") String username);
 }

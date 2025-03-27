@@ -1,5 +1,7 @@
 package com.example.javademo.dto;
 
+import com.example.javademo.entity.User;
+
 public class UserLoginDTO {
     private Long id;
     private String user_name;
@@ -14,11 +16,11 @@ public class UserLoginDTO {
         this.id = id;
     }
 
-    public String getUser_name() {
+    public String getUserName() {
         return user_name;
     }
 
-    public void setUser_name(String user_name) {
+    public void setUserName(String user_name) {
         this.user_name = user_name;
     }
 

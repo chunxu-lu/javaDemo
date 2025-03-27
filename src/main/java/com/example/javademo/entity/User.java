@@ -1,5 +1,4 @@
 package com.example.javademo.entity;
-
 import java.util.Date;
 
 public class User {

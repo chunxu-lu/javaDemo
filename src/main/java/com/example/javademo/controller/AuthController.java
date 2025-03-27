@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,13 +37,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest authenticationRequest) throws Exception {
-        UserLoginDTO userLoginDTO = userMapper.findByUsername(authenticationRequest.getUsername());
+        Optional<UserLoginDTO> userLoginDTO = userMapper.findByUsername(authenticationRequest.getUsername());
         if(userLoginDTO == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(),"user not found",null));
         }
 
         String encryptedPassword = encryptPassword(authenticationRequest.getPassword());
-        if(!userLoginDTO.getPassword().equals(encryptedPassword)){
+        UserLoginDTO user = userLoginDTO.get(); // 解包 Optional
+        if(!user.getPassword().equals(encryptedPassword)){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(),"password not correct",null));
         }
 
