@@ -1,6 +1,7 @@
 package com.example.javademo.config;
 
 import com.example.javademo.filter.JwtRequestFilter;
+import com.example.javademo.security.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,10 +21,16 @@ public class SecurityConfig {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     // 定义SecurityFilterChain Bean，配置HTTP安全设置
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
                 .csrf(csrf -> csrf.disable()) // 明确禁用CSRF
                 // 配置授权规则
                 .authorizeHttpRequests(auth -> auth

@@ -2,9 +2,9 @@ package com.example.javademo.controller;
 
 import com.example.javademo.dto.UserLoginDTO;
 import com.example.javademo.mapper.UserMapper;
-import com.example.javademo.model.JwtResponse;
 import com.example.javademo.model.LoginRequest;
 import com.example.javademo.model.ResponseResult;
+import com.example.javademo.model.JwtResponse;
 import com.example.javademo.model.UserResponse;
 import com.example.javademo.service.RedisService;
 import com.example.javademo.util.JwtUtil;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,29 +22,27 @@ import java.util.Optional;
 public class AuthController {
 
     private final JwtUtil jwtUtil;
+    private final UserMapper userMapper;
+    private final RedisService redisService;
 
     @Autowired
-    public AuthController(JwtUtil jwtUtil ) {
+    public AuthController(JwtUtil jwtUtil, UserMapper userMapper, RedisService redisService) {
         this.jwtUtil = jwtUtil;
+        this.userMapper = userMapper;
+        this.redisService = redisService;
     }
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private RedisService redisService;
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest authenticationRequest) throws Exception {
         Optional<UserLoginDTO> userLoginDTO = userMapper.findByUsername(authenticationRequest.getUsername());
-        if(userLoginDTO == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(),"user not found",null));
+        if (userLoginDTO.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "user not found", null));
         }
 
         String encryptedPassword = encryptPassword(authenticationRequest.getPassword());
         UserLoginDTO user = userLoginDTO.get(); // 解包 Optional
-        if(!user.getPassword().equals(encryptedPassword)){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(),"password not correct",null));
+        if (!user.getPassword().equals(encryptedPassword)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "password not correct", null));
         }
 
         final String jwt = jwtUtil.generateToken(authenticationRequest.getUsername());
@@ -56,19 +53,39 @@ public class AuthController {
 
     @GetMapping("/user-info")
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.ok(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", null));
-        }
+                    String token = authHeader.substring(7);
+            String username = jwtUtil.getUsernameFromToken(token);
+//        if (username != null && jwtUtil.validateToken(token, username)) {
+            UserResponse userResponse = new UserResponse(username);
+            return ResponseEntity.ok(new ResponseResult().success(userResponse));
+//        } else {
+//            return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
+//        }
 
-        String token = authHeader.substring(7); // The part after "Bearer "
-        String username = jwtUtil.getUsernameFromToken(token);
 
-        if (username != null && jwtUtil.validateToken(token, username)) {
-            UserResponse response = new UserResponse(username);
-            return ResponseEntity.ok(new ResponseResult().success(response));
-        } else {
-            return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
-        }
+
+
+
+
+//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", null));
+//        }
+//
+//        try {
+//            String token = authHeader.substring(7);
+//            String username = jwtUtil.getUsernameFromToken(token);
+//
+//            if (username != null && jwtUtil.validateToken(token, username)) {
+//                UserResponse userResponse = new UserResponse(username);
+//                return ResponseEntity.ok(new ResponseResult().success(userResponse));
+//            } else {
+//                return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
+//            }
+//        } catch (TokenExpiredException e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Token expired", null));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Invalid token", null));
+//        }
     }
 
     @PostMapping("/clear-chat-history")
