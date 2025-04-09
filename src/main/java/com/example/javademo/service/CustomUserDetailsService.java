@@ -2,6 +2,7 @@ package com.example.javademo.service;
 
 
 import com.example.javademo.dto.UserLoginDTO;
+import com.example.javademo.enums.UserRole;
 import com.example.javademo.mapper.UserMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,10 +21,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserLoginDTO user = userMapper.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
+        UserRole userRole = userMapper.getUserRole(username);
+        System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"+ username);
+        System.out.println("userRole = " + userRole);
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUserName())
                 .password(user.getPassword())
-                .roles("USER") // 角色格式如 "USER,ADMIN"
+                .roles(userRole.toString()) // 角色格式如 "USER,ADMIN"
                 .build();
     }
 }

@@ -6,8 +6,10 @@ import com.example.javademo.model.LoginRequest;
 import com.example.javademo.model.ResponseResult;
 import com.example.javademo.model.JwtResponse;
 import com.example.javademo.model.UserResponse;
+import com.example.javademo.service.AuthService;
 import com.example.javademo.service.RedisService;
 import com.example.javademo.util.JwtUtil;
+import com.qiniu.util.Auth;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +27,14 @@ public class AuthController {
     private final UserMapper userMapper;
     private final RedisService redisService;
 
+    private final AuthService authService;
+
     @Autowired
-    public AuthController(JwtUtil jwtUtil, UserMapper userMapper, RedisService redisService) {
+    public AuthController(JwtUtil jwtUtil, UserMapper userMapper, RedisService redisService, AuthService authService) {
         this.jwtUtil = jwtUtil;
         this.userMapper = userMapper;
         this.redisService = redisService;
+        this.authService = authService;
     }
 
     @PostMapping("/login")
@@ -45,7 +50,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "password not correct", null));
         }
 
-        final String jwt = jwtUtil.generateToken(authenticationRequest.getUsername());
+        final String jwt = jwtUtil.generateToken(authenticationRequest.getUsername(), user.getId().toString()); // 传入用户ID
         redisService.saveData("userName:" + authenticationRequest.getUsername(), authenticationRequest.getUsername()); // 保存用户名到Redis
         redisService.saveData("session:" + jwt, authenticationRequest.getUsername()); // 保存用户名到Redis，键为session ID
         return ResponseEntity.ok(new ResponseResult().success(new JwtResponse(jwt)));
@@ -55,37 +60,8 @@ public class AuthController {
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
                     String token = authHeader.substring(7);
             String username = jwtUtil.getUsernameFromToken(token);
-//        if (username != null && jwtUtil.validateToken(token, username)) {
             UserResponse userResponse = new UserResponse(username);
             return ResponseEntity.ok(new ResponseResult().success(userResponse));
-//        } else {
-//            return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
-//        }
-
-
-
-
-
-
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", null));
-//        }
-//
-//        try {
-//            String token = authHeader.substring(7);
-//            String username = jwtUtil.getUsernameFromToken(token);
-//
-//            if (username != null && jwtUtil.validateToken(token, username)) {
-//                UserResponse userResponse = new UserResponse(username);
-//                return ResponseEntity.ok(new ResponseResult().success(userResponse));
-//            } else {
-//                return ResponseEntity.ok(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
-//            }
-//        } catch (TokenExpiredException e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Token expired", null));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Invalid token", null));
-//        }
     }
 
     @PostMapping("/clear-chat-history")
@@ -110,6 +86,14 @@ public class AuthController {
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseResult(HttpStatus.FORBIDDEN.value(), "Forbidden", null));
         }
+    }
+
+    @GetMapping("/path")
+    public ResponseEntity<?> getPath(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7); // The part after "Bearer "
+        String username = jwtUtil.getUsernameFromToken(token);
+        Object paths = authService.getPath(username);
+        return ResponseEntity.ok(new ResponseResult().success(paths));
     }
 
     // 新增方法：SHA256 加密

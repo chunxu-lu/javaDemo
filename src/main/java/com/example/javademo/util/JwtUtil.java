@@ -10,14 +10,15 @@ import java.util.Date;
 
 public class JwtUtil {
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long TOKEN_VALIDITY = 30 * 1000; // 30 seconds
+    private static final long TOKEN_VALIDITY = 7200 * 1000; // 7200 seconds
 
     /**
      * 生成 Token（仅负责生成，不验证）
      */
-    public String generateToken(String username) {
+    public String generateToken(String username, String userId) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId) // 添加用户ID到Claims中
                 .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
                 .signWith(SECRET_KEY)
                 .compact();
@@ -34,6 +35,19 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.getSubject();
+    }
+
+    /**
+     * 从 Token 中解析用户ID（不验证有效性，仅解析）
+     * 注意：调用方需确保 Token 已通过 Spring Security 验证！
+     */
+    public String getUserIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("userId", String.class);
     }
 
     /**

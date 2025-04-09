@@ -30,6 +30,6 @@ public class ResponseResult<T> {
     }
 
     public static <T> ResponseResult<T> error(int code, String msg) {
-        return new ResponseResult<>(HttpStatus.BAD_REQUEST.value(), msg, null);
+        return new ResponseResult<>(code | HttpStatus.BAD_REQUEST.value(), msg, null);
     }
 }

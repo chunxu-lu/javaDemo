@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: JavaDemo
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/vite?useSSL=false&serverTimezone=UTC
+    username: vite_user
+    password: qq123456
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+qiniu:
+  access-key: i8wdUz26EUmzOUlr9_62h41lAF_DVJcVJq-gDM0m
+  secret-key: idrqFAWopz2f2SwAJquMhrQIjx1RyVxN8XXnOgcu
+  bucket: xu-image-bucket
+  domain: cdn.bytedancing.top
+
+aj:
+  captcha:
+    jigsaw: classpath:images/jigsaw
+    pic-click: classpath:images/pic-click
+    cache-type: local
+    # Optional local cache settings (commented out by default)
+    # cache-number: 1000
+    # timing-clear: 180
+    type: default
+    water-mark: \u6bd4\u7279\u8df3\u8d8a  # "????" in Unicode
+    water-font: \u5b8b\u4f53  # "??" in Unicode
+    font-type: \u5b8b\u4f53  # "??"
+    slip-offset: 5
+    aes-status: true
+    interference-options: 2
+
+mybatis:
+  mapper-locations: classpath:mappers/*xml
+  type-aliases-package: com.example.javademo.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+pagehelper:
+  helperDialect: mysql  # ?????
+  reasonable: true      # ?????????
+  supportMethodsArguments: true # ????????????
+  params: count=countSql     # ?? COUNT SQL

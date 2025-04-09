@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.example.javademo.security.CustomAccessDeniedHandler;
 
 // 配置类，启用Web安全
 @Configuration
@@ -24,20 +25,29 @@ public class SecurityConfig {
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+    @Autowired
+    CustomAccessDeniedHandler customAccessDeniedHandler;
+
     // 定义SecurityFilterChain Bean，配置HTTP安全设置
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .exceptionHandling(exception -> exception
+                .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(customAccessDeniedHandler) // 注入自定义处理器
                 )
                 .csrf(csrf -> csrf.disable()) // 明确禁用CSRF
                 // 配置授权规则
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/chat", "/sockjs-node/**").permitAll() // 放行 WebSocket 和 SockJS 路径
                         // 允许所有用户访问登录接口
                         .requestMatchers("/api/auth/login").permitAll()
                         // 允许所有用户访问/api/captcha/**路径下的资源
                         .requestMatchers("/api/captcha/**").permitAll()
+                        // 仅允许管理员角色访问/api/admin/**路径下的资源
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 其他所有请求需要验证token
                         .anyRequest().authenticated()
                 )
@@ -60,4 +70,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

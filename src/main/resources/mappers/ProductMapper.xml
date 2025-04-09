@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.javademo.mapper.ProductMapper">
+    <delete id="deleteProducts">
+        delete from product_inventory where id in
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getProductList" resultType="com.example.javademo.entity.Product">
+        select * from product_inventory
+        <where>
+            <if test="productName  !=  null  and productName != ''">
+                and product_name like concat('%' , #{productName} , '%')
+            </if>
+            <if test="productCode != null and productCode != ''">
+                and product_code = #{productCode}
+            </if>
+            <if test="category != null and category != ''">
+                and category = #{category}
+            </if>
+            <if test="supplier != null and supplier != ''">
+                and supplier = #{supplier}
+            </if>
+            <if test="productionDate != null">
+                and production_date = #{productionDate}
+            </if>
+            <if test="lastUpdatedStart != null">
+                and last_updated &gt;= #{lastUpdatedStart}
+            </if>
+            <if test="lastUpdatedEnd != null">
+                and last_updated &lt;= #{lastUpdatedEnd} + INTERVAL 1 DAY
+            </if>
+        </where>
+    </select>
+    <insert id="addProduct" parameterType="com.example.javademo.dto.ProductAddDTO">
+        insert into product_inventory(product_code, product_name, category, current_stock, price, supplier, production_date, is_active)
+        values (#{productCode}, #{productName}, #{category}, #{currentStock}, #{price}, #{supplier}, #{productionDate}, #{isActive})
+    </insert>
+</mapper>
